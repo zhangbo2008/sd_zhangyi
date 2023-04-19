@@ -15,3 +15,4 @@ train_drembooth里面参数已经调过.  先这样. 以后再有需求再弄.
 自己服务器太费劲了.还是colab搞起.
 # sd_zhangyi
 "# sd_zhangyi" 
+# sd_zhangyi
