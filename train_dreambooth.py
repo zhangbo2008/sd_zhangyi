@@ -860,8 +860,8 @@ def main(args):
                 else:
                     raise ValueError(f"Unknown prediction type {noise_scheduler.config.prediction_type}")
 #计算loss!
-                if args.with_prior_preservation:#第一种模式也是最好的模式,我们计算class和instance2个部分.
-                    # Chunk the noise and model_pred into two parts and compute the loss on each part separately.
+                if args.with_prior_preservation:#第一种模式也是最好的模式,我们计算class和instance2个部分.???????????????????????????????????????????????????????????
+                    # Chunk the noise and model_pred into two parts and compute the loss on each part separately.#####=================一种是prior类别的loss, 也就是person类别的loss, 一种是zhangyi类别的loss.
                     model_pred, model_pred_prior = torch.chunk(model_pred, 2, dim=0)
                     target, target_prior = torch.chunk(target, 2, dim=0)
 
