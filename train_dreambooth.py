@@ -613,6 +613,21 @@ def main(args):
 
     noise_scheduler = DDPMScheduler.from_config(args.pretrained_model_name_or_path, subfolder="scheduler")
 
+
+
+    #noise_scheduler: {
+    #   "_class_name": "PNDMScheduler",
+    #   "_diffusers_version": "0.6.0",
+    #   "beta_end": 0.012,
+    #   "beta_schedule": "scaled_linear",
+    #   "beta_start": 0.00085,
+    #   "num_train_timesteps": 1000,
+    #   "set_alpha_to_one": false,
+    #   "skip_prk_steps": true,
+    #   "steps_offset": 1,
+    #   "trained_betas": null,
+    #   "clip_sample": false
+    # }
     train_dataset = DreamBoothDataset(
         concepts_list=args.concepts_list,
         tokenizer=tokenizer,
@@ -808,16 +823,16 @@ def main(args):
                         latent_dist = batch[0][0]
                     else:
                         latent_dist = vae.encode(batch["pixel_values"].to(dtype=weight_dtype)).latent_dist
-                    latents = latent_dist.sample() * 0.18215
+                    latents = latent_dist.sample() * 0.18215#==========这样就对图像进行了压缩.
 
 
-
-#=============得到噪音
+#==========跑模型训练第一步.
+#=============得到噪音,图像压缩后噪音的变量就少了就好学习了.
                 # Sample noise that we'll add to the latents
                 noise = torch.randn_like(latents)
                 bsz = latents.shape[0]
                 # Sample a random timestep for each image
-                timesteps = torch.randint(0, noise_scheduler.config.num_train_timesteps, (bsz,), device=latents.device)
+                timesteps = torch.randint(0, noise_scheduler.config.num_train_timesteps, (bsz,), device=latents.device) # noise_scheduler.config.num_train_timesteps=1000, 获得bsz这么多个int
                 timesteps = timesteps.long()
 #==========添加噪音到图片.
                 # Add noise to the latents according to the noise magnitude at each timestep
