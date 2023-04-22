@@ -819,6 +819,7 @@ def main(args):
             with accelerator.accumulate(unet):
                 # Convert images to latent space
                 with torch.no_grad():#还是图片提取特征.
+                    print(batch)
                     if not args.not_cache_latents:
                         latent_dist = batch[0][0]
                     else:
@@ -837,7 +838,7 @@ def main(args):
 #==========添加噪音到图片.
                 # Add noise to the latents according to the noise magnitude at each timestep
                 # (this is the forward diffusion process)
-                noisy_latents = noise_scheduler.add_noise(latents, noise, timesteps)
+                noisy_latents = noise_scheduler.add_noise(latents, noise, timesteps) #https://www.cnblogs.com/zhangbo2008/p/17341284.html 里面公式* noisy_latents是加噪的图片. xt
 #=========获得文字编码.
                 # Get the text embedding for conditioning
                 with text_enc_context:
@@ -850,7 +851,7 @@ def main(args):
                         encoder_hidden_states = text_encoder(batch["input_ids"])[0]
 #==============模型喂入噪音图片,返回去噪后的图片model_pred
                 # Predict the noise residual
-                model_pred = unet(noisy_latents, timesteps, encoder_hidden_states).sample
+                model_pred = unet(noisy_latents, timesteps, encoder_hidden_states).sample #最后一个公式. 的e_theta这个网络就是这个.
 
                 # Get the target for loss depending on the prediction type
                 if noise_scheduler.config.prediction_type == "epsilon":
@@ -862,7 +863,7 @@ def main(args):
 #计算loss!
                 if args.with_prior_preservation:#第一种模式也是最好的模式,我们计算class和instance2个部分.???????????????????????????????????????????????????????????
                     # Chunk the noise and model_pred into two parts and compute the loss on each part separately.#####=================一种是prior类别的loss, 也就是person类别的loss, 一种是zhangyi类别的loss.
-                    model_pred, model_pred_prior = torch.chunk(model_pred, 2, dim=0)
+                    model_pred, model_pred_prior = torch.chunk(model_pred, 2, dim=0)#==========0维切割,所以是batch里面一半学instance,一半学class. 这个地方我看可以继续优化看看!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!2023-04-22,23点13
                     target, target_prior = torch.chunk(target, 2, dim=0)
 
                     # Compute instance loss
@@ -877,13 +878,6 @@ def main(args):
                     loss = F.mse_loss(model_pred.float(), target.float(), reduction="mean")
 
                 accelerator.backward(loss)
-                # if accelerator.sync_gradients:
-                #     params_to_clip = (
-                #         itertools.chain(unet.parameters(), text_encoder.parameters())
-                #         if args.train_text_encoder
-                #         else unet.parameters()
-                #     )
-                #     accelerator.clip_grad_norm_(params_to_clip, args.max_grad_norm)
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad(set_to_none=True)

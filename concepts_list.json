@@ -1,6 +1,8 @@
 [
     {
-        "instance_prompt": "photo of zhangyi",
-        "instance_data_dir": "aaa_only_face"
+        "instance_prompt": "photo of zhangyi ",
+        "instance_data_dir": "aaa",
+        "class_prompt": "photo of person",
+        "class_data_dir": "person_face"
     }
 ]
